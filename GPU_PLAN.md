@@ -1,54 +1,66 @@
-# Block 1 GPU run plan (DRAFT — nothing has been sent or run on GPU)
+# Block 1 GPU run plan (DRAFT — nothing sent/run on GPU yet)
 
-Target: Kaggle 2x T4 16 GB (sm75): fp16 only (no bf16), no FlashAttention-2. Attention through torch SDPA
-(mem-efficient / math backend on sm75); xformers memory_efficient_attention as fallback. VGGT-1B weights: facebook/VGGT-1B,
-non-commercial licence, research use only. All speed-ups not measured on sm80+ are reported as ANALYTIC (FLOP counter).
+Hardware: Kaggle 2x T4 16 GB (sm75). fp16 only (no bf16); torch SDPA (mem-efficient/math kernels on sm75, no
+FlashAttention-2); `--attn xformers` fallback. Weights facebook/VGGT-1B: NON-COMMERCIAL, research use only.
+Speed-ups not measured on sm80+ are reported as **calculated (analytic FLOPs)**, never as measured.
 
-## Data bundle (≈415 MB, well under 20 GB)
-`/workspace/g1_block1_bundle.tar` = bundle/images (2240 CAM_FRONT sweep JPEGs), bundle/depth (550 sparse LiDAR depth npz,
-eval frames only), bundle/manifests (windows.json, frames_stride{1,2,4}.txt). Upload as a private Kaggle dataset `g1-block1-bundle`.
+## Decisions applied (G1 Idea Agent, 2026-10-22)
+1. Main table: method alone at budgets 0.5/0.25/0.1; unreachable cells = "not reachable (min = x)". A separate,
+   labelled **combo column** (accelerator + frame drop) fills 0.25/0.1. Stop rule judged on the main table only.
+2. AVGGT = **our reimplementation** (g1/avggt.py), FLOPs calculated.
+3. GitHub repo: NOT created (needs Sudesh's own approval — see report).
+4. >80 m: reported (coverage, n) but not scored. Far-field test = 40–80 m band. Primary CIs = scene-level bootstrap.
 
-## Session setup
+## Step 1 — controls (self-contained tarball)
+`/workspace/g1_kaggle_controls.tar` -> upload as PRIVATE Kaggle dataset `g1-kaggle-controls`. In a 2xT4 notebook (internet ON for the HF weight download):
 ```bash
-cd /kaggle/working && tar xf /kaggle/input/g1-block1-bundle/g1_block1_bundle.tar
-git clone https://github.com/facebookresearch/vggt && pip install -e vggt   # torch already present
-# copy repo code (scripts/, g1/) from the private bundle / dataset; repo is NOT on GitHub yet
-python -c "import torch;print(torch.cuda.get_device_capability())"   # expect (7, 5)
+cp -r /kaggle/input/g1-kaggle-controls/g1_kaggle_controls /kaggle/working/ 2>/dev/null || tar xf /kaggle/input/g1-kaggle-controls/g1_kaggle_controls.tar -C /kaggle/working
+cd /kaggle/working/g1_kaggle_controls && bash run_controls.sh sdpa      # fallback: bash run_controls.sh xformers
 ```
+Runs dense_N32, dense_N16, dense_N8, dense_res0.5, dense_res0.25 over 70 windows (GPU0/GPU1 in parallel), a
+10-window timing repeat of N32, then scores. Disk: weights 4.7 GB + bundle 0.4 GB + preds ~1.5 GB < 20 GB.
+**Return to us:** `g1_controls_outputs.tgz` (results/block1/{per_window,summary,delta_vs_dense}.csv,
+preds/*/run_meta.json with GPU name/torch/CUDA/per-window secs+peak mem, logs_*.txt) and, if space allows,
+`preds/` npz (~1.5 GB) for re-scoring.
 
-## Controls (stock VGGT-1B) — each GPU of the 2x T4 runs one config at a time
+## Step 2 — accelerators (main table + combo column)
+Analytic FLOP fractions (results/block1/flop_table.csv; dense N32 = 113.4 TFLOP):
+
+| Method | Native configs (frac) | Main 0.5 / 0.25 / 0.1 | Combo column (with frame drop) | sm80+? |
+|---|---|---|---|---|
+| AVGGT (our reimpl., t_early=9, σ∈{2,4,6,9}) | 0.644 / 0.564 / 0.536 / 0.515 | **not reachable (min = 0.515)** at all three | N16 σ=2..9: 0.278–0.247 (→0.25 cell: σ=9 N16 0.247); N8: 0.128–0.121 (0.1 not reachable) | No (pure PyTorch, explicit chunked attention; accuracy exact, speed not representative) |
+| Global-token reduction family (FastVGGT; GoToHunt token part) | keep 0.46 → 0.5 | 0.5 reachable; 0.25/0.1 **not reachable (min = 0.324)** | N16 keep 0.596 → 0.25; N8 keep 0.404 → 0.1 | FastVGGT: no; GoToHunt: no custom kernel found (verify) |
+| GoToHunt (official) | set via `--token_ds_layers`, `--global_as_frame_layers`, `--frame_token_downsample`; achieved FLOPs computed by our counter per config | as reached | as reached | verify on T4 |
+| Co-Me (official) | merge ratio configs; kernels | as reached | as reached | **Effectively yes** (manual CUDA kernels; verified only on A100/Ada/5090) → accuracy on T4 via eager/unfused path if it exists, else Modal A100 |
+
+AVGGT runs (T4, fp16):
 ```bash
-CUDA_VISIBLE_DEVICES=0 python scripts/run_vggt.py --stride 1 --out preds/dense_N32 --img_root bundle/images
-CUDA_VISIBLE_DEVICES=1 python scripts/run_vggt.py --stride 2 --out preds/dense_N16 --img_root bundle/images
-CUDA_VISIBLE_DEVICES=1 python scripts/run_vggt.py --stride 4 --out preds/dense_N8  --img_root bundle/images
-CUDA_VISIBLE_DEVICES=0 python scripts/run_vggt.py --scale 0.5   --out preds/dense_res0.5
-CUDA_VISIBLE_DEVICES=0 python scripts/run_vggt.py --scale 0.25  --out preds/dense_res0.25    # 1/4 res: 70x126 px, 5x9 patches
-CUDA_VISIBLE_DEVICES=0 python scripts/run_vggt.py --scale 0.707 --out preds/dense_res0.707   # optional, cheap
-python scripts/score.py preds/* --out results/block1
+for S in 2 4 9; do python scripts/run_vggt.py --method avggt --sigma $S --t_early 9 --out preds/avggt_s${S}_N32; done
+python scripts/run_vggt.py --method avggt --sigma 9 --t_early 9 --stride 2 --out preds/avggt_s9_N16   # combo -> 0.247
+python scripts/run_vggt.py --method avggt --sigma 9 --t_early 9 --stride 4 --out preds/avggt_s9_N8    # combo -> 0.121
 ```
-Timing: run dense_N32 a second time with `--out preds/dense_N32_rep` for wall-clock variance; report T4 wall-clock as T4-only.
+FastVGGT / GoToHunt: clone official repos inside the notebook, wrap with `scripts/run_accel.py` (TO WRITE after a
+15-min smoke test per repo) writing the same npz schema; GoToHunt frame selection (`--frame_strategy`) DISABLED so
+the input frames equal the config's frames. Configure each to the budget via our FLOP counter; record achieved frac.
 
-## Accelerators (released code). Budgets 0.5 / 0.25 / 0.1 of dense N=32 VGGT FLOPs (analytic, results/block1/flop_table.csv)
-| Method | Code | sm80+ needed? | Plan on T4 |
-|---|---|---|---|
-| GoToHunt (2605.23892) | github.com/zsh2000/gotohunt (MapAnything env) | No custom kernel found in README — believed sm75-OK, verify | `--token_ds_layers`, `--global_as_frame_layers`, `--frame_token_downsample` swept to hit budget. Its frame-selection (`--frame_strategy diverse`, MegaLoc covisibility) must be DISABLED or fixed to the 32 frames, else it changes the eval set. |
-| FastVGGT | github.com/mystorm16/FastVGGT | No (pure PyTorch merging; uses SDPA) — verify | `--merging <block>` + merge ratio swept. |
-| AVGGT (2512.02541) | **repo not located yet** — blocker if none released | unknown | If no code: reimplement (global→frame in early layers + K/V subsample) as masking; FLOPs analytic. |
-| Co-Me | github.com/co-me-tokens/CoMe | **Yes in practice**: custom CUDA kernels compiled manually, verified only on A100/Ada/5090 (CUDA 12.8/13.0); new "customized flash attn" path | Try compile on T4; if it fails use its non-fused/eager path (or reimplement merge with masking) for ACCURACY only; speed-up = analytic. Candidate for the one Modal A100 sm80 check (fused kernel latency, ~20 min). |
-
-Wrapper pattern (to write once each repo is checked on GPU): `scripts/run_accel.py --method {gotohunt,fastvggt,avggt,come} --budget {0.5,0.25,0.1} --out preds/<method>_b<budget>`
-must write the same npz schema as run_vggt.py (idx, extrinsic, depth, input_hw, secs, peak_mem) and log the achieved analytic FLOP fraction.
-
-**Budget feasibility (important):** at N=32, 294x518 (777 patches/frame), global attention is 67.6 % of FLOPs; encoder+frame
-blocks+heads are a 32.4 % floor. Methods that only reduce global-attention tokens CANNOT reach 0.25 or 0.1. AVGGT-style with 12
-global layers turned to frame attention cannot go below ~0.47 by KV subsampling alone. Only methods that also cut frame-block/encoder
-tokens (GoToHunt's frame-token downsampling, Co-Me merging across blocks) might. Unreachable cells will be reported as "not
-reachable (min achievable = x)" — never silently replaced. Decision needed from idea agent: allow accelerator + frame-drop combos to fill 0.25/0.1?
+## Step 3 — Modal A100 check (Co-Me only, < 20 min)
+Goal: one sm80 data point — does Co-Me's fused kernel build and what is its measured vs analytic speed-up at N=32.
+```bash
+# modal run (A100-40GB, image nvidia/cuda:12.8-devel + torch cu128), budget 20 min hard timeout
+git clone https://github.com/co-me-tokens/CoMe && cd CoMe && <build kernels per README>   # ~8 min
+python -m src.infer model=co_me_fused_vggt_3x3 dataset=custom_image <3 windows, N=32>          # ~5 min
+python -m src.infer model=vggt dataset=custom_image <same 3 windows>                          # ~3 min
+```
+Record: build success, median latency both models, peak mem, and the predictions for those 3 windows (to score
+accuracy with our scorer). Nothing else runs on Modal.
 
 ## GPU-hour estimate (T4)
-Dense N=32 = 113 TFLOP/window (analytic); assume ~10 s/window on T4 fp16 incl. I/O.
-- Controls (6 configs, 2.1 dense-equivalents x 70 windows) + timing repeat: ~1 GPU-h
-- Accelerators 4 x 3 budgets, masked/eager implementations often cost >= dense on T4: ~12 runs x 70 x ~15 s ≈ 3.5 GPU-h
-- Env setup/kernel compile attempts/debug/model load (Co-Me, GoToHunt-MapAnything env): ~4 GPU-h
-- Re-runs/failures margin x1.5
-**Total ≈ 12–16 GPU-h** (within 15–25 target, under the 30 h/week cap). Spare ~10 h can go to the π3 column or random-merge seeds.
+| Item | GPU-h |
+|---|---|
+| Controls (5 configs ≈ 1.67 dense-equivalents × 70 windows × ~10 s) + timing repeat + weight download | ~1 |
+| AVGGT 5 runs (explicit attention ≈ 1.5× dense time) | ~2.5 |
+| FastVGGT + GoToHunt: ~5 configs each incl. combos | ~3.5 |
+| Co-Me on T4 (eager path, if available) ~4 configs | ~2 |
+| Env setup / kernel-build attempts / debug | ~4 |
+| Margin ×1.3 | ~4 |
+| **Total** | **≈ 15–17 GPU-h** (cap 30) |

@@ -1,14 +1,32 @@
-config,n_frames,H,W,patches,keep_global,kv_keep,global_as_frame,TFLOPs,global_share,frac_dense,note
-dense_N32,32,294,518,777,1.0,1.0,0,113.43,0.676,1.0,
-dense_N16,16,294,518,777,1.0,1.0,0,41.32,0.555,0.3643,
-dense_N8,8,294,518,777,1.0,1.0,0,16.81,0.454,0.1482,
-dense_res0.707,32,210,364,390,1.0,1.0,0,40.96,0.57,0.3611,
-dense_res0.5,32,140,252,180,1.0,1.0,0,15.05,0.467,0.1327,
-dense_res0.354,32,98,182,91,1.0,1.0,0,6.91,0.403,0.0609,
-dense_res0.25,32,70,126,45,1.0,1.0,0,3.37,0.361,0.0297,
-tokenmerge_b0.5,32,294,518,777,0.4597,1.0,0,56.71,0.352,0.5,
-avggt_g12_b0.5,32,294,518,777,1.0,0.1262,12,56.71,0.352,0.5,
-tokenmerge_b0.25,32,294,518,777,0.0,1.0,0,36.75,0.0,0.324,UNREACHABLE: global-only reduction floor=0.324
-avggt_g12_b0.25,32,294,518,777,1.0,0.0,12,52.83,0.304,0.4658,UNREACHABLE
-tokenmerge_b0.1,32,294,518,777,0.0,1.0,0,36.75,0.0,0.324,UNREACHABLE: global-only reduction floor=0.324
-avggt_g12_b0.1,32,294,518,777,1.0,0.0,12,52.83,0.304,0.4658,UNREACHABLE
+table,config,budget,n_frames,H,W,keep_global,kv_keep,global_as_frame,TFLOPs,frac_dense,note
+controls,dense_N32,,32,294,518,1.0,1.0,0,113.43,1.0,
+controls,dense_N16,,16,294,518,1.0,1.0,0,41.32,0.3643,
+controls,dense_N8,,8,294,518,1.0,1.0,0,16.81,0.1482,
+controls,dense_res0.707,,32,210,364,1.0,1.0,0,40.96,0.3611,
+controls,dense_res0.5,,32,140,252,1.0,1.0,0,15.05,0.1327,
+controls,dense_res0.354,,32,98,182,1.0,1.0,0,6.91,0.0609,
+controls,dense_res0.25,,32,70,126,1.0,1.0,0,3.37,0.0297,
+avggt_native,avggt_s2_t9_N32,,32,294,518,1.0,0.5317,9,73.05,0.644,our reimplementation; analytic
+combo_framedrop,avggt_s2_t9_N16,,16,294,518,1.0,0.5468,9,31.55,0.2782,our reimplementation; analytic
+combo_framedrop,avggt_s2_t9_N8,,8,294,518,1.0,0.577,9,14.53,0.1281,our reimplementation; analytic
+avggt_native,avggt_s4_t9_N32,,32,294,518,1.0,0.2964,9,63.99,0.5642,our reimplementation; analytic
+combo_framedrop,avggt_s4_t9_N16,,16,294,518,1.0,0.3191,9,29.36,0.2589,our reimplementation; analytic
+combo_framedrop,avggt_s4_t9_N8,,8,294,518,1.0,0.3645,9,14.02,0.1236,our reimplementation; analytic
+avggt_native,avggt_s6_t9_N32,,32,294,518,1.0,0.2146,9,60.85,0.5364,our reimplementation; analytic
+combo_framedrop,avggt_s6_t9_N16,,16,294,518,1.0,0.2399,9,28.6,0.2522,our reimplementation; analytic
+combo_framedrop,avggt_s6_t9_N8,,8,294,518,1.0,0.2906,9,13.85,0.1221,our reimplementation; analytic
+avggt_native,avggt_s9_t9_N32,,32,294,518,1.0,0.1502,9,58.37,0.5146,our reimplementation; analytic
+combo_framedrop,avggt_s9_t9_N16,,16,294,518,1.0,0.1776,9,28.0,0.2469,our reimplementation; analytic
+combo_framedrop,avggt_s9_t9_N8,,8,294,518,1.0,0.2324,9,13.71,0.1208,our reimplementation; analytic
+main,globaltoken_keep_b0.5,0.5,32,294,518,0.4597,1.0,0,56.71,0.5,
+main,avggt_b0.5,0.5,32,294,518,1.0,0.1502,9,58.37,0.5146,"not reachable (min = 0.515 at sigma=9,t_early=9)"
+combo_framedrop,globaltoken_keep_N16_b0.5,0.5,16,294,518,1.0,1.0,0,41.32,0.3643,frame-drop alone already <= budget (0.364); no merge needed
+combo_framedrop,globaltoken_keep_N8_b0.5,0.5,8,294,518,1.0,1.0,0,16.81,0.1482,frame-drop alone already <= budget (0.148); no merge needed
+main,globaltoken_keep_b0.25,0.25,32,294,518,0.0,1.0,0,36.75,0.324,not reachable (min = 0.324)
+main,avggt_b0.25,0.25,32,294,518,1.0,0.1502,9,58.37,0.5146,"not reachable (min = 0.515 at sigma=9,t_early=9)"
+combo_framedrop,globaltoken_keep_N16_b0.25,0.25,16,294,518,0.5963,1.0,0,28.36,0.25,combo column only
+combo_framedrop,globaltoken_keep_N8_b0.25,0.25,8,294,518,1.0,1.0,0,16.81,0.1482,frame-drop alone already <= budget (0.148); no merge needed
+main,globaltoken_keep_b0.1,0.1,32,294,518,0.0,1.0,0,36.75,0.324,not reachable (min = 0.324)
+main,avggt_b0.1,0.1,32,294,518,1.0,0.1502,9,58.37,0.5146,"not reachable (min = 0.515 at sigma=9,t_early=9)"
+combo_framedrop,globaltoken_keep_N16_b0.1,0.1,16,294,518,0.0,1.0,0,18.38,0.162,not reachable (min = 0.162)
+combo_framedrop,globaltoken_keep_N8_b0.1,0.1,8,294,518,0.404,1.0,0,11.34,0.1,combo column only

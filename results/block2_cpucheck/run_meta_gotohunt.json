@@ -1,0 +1,55 @@
+{
+ "method": "gotohunt",
+ "budget": 0.1,
+ "frames": 8,
+ "scale": 0.5,
+ "plan": {
+  "reachable": false,
+  "t": 3,
+  "gaf_layers": [
+   0,
+   1
+  ],
+  "ds_layers": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "achieved": 0.137,
+  "note": "paper config min 0.137"
+ },
+ "repo": "https://github.com/zsh2000/gotohunt@6c92c4f0c747847d85d78fadd3a426e7046e45dc",
+ "impl": "official GoToHunt Attention.forward on stock VGGT, frame selection OFF",
+ "flops": {
+  "total": 3045518802944.0,
+  "frac": 0.026850210186777884,
+  "encoder": 922539786240.0,
+  "frame": 920805703680.0,
+  "global_": 1038858649600.0,
+  "heads_est": 163314663424.0,
+  "method_overhead": 0.0
+ },
+ "torch": "2.14.1+cpu",
+ "gpu": "cpu",
+ "capability": null,
+ "dtype": "torch.float32",
+ "input_hw": [
+  140,
+  252
+ ],
+ "windows": {
+  "scene-0061_w0": {
+   "n_frames": 8,
+   "hw": [
+    140,
+    252
+   ],
+   "secs": 5.580322691999754,
+   "peak_gib": -9.313225746154785e-10
+  }
+ }
+}

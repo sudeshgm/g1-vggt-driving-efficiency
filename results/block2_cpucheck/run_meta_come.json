@@ -1,0 +1,49 @@
+{
+ "method": "come",
+ "budget": 0.1,
+ "frames": 8,
+ "scale": 0.5,
+ "plan": {
+  "reachable": true,
+  "threshold": 0.352,
+  "encoder_layer": 14,
+  "group": 3,
+  "achieved": 0.0991
+ },
+ "repo": "https://github.com/co-me-tokens/CoMe@5c7cfbc14da37f5dbb991e3a6f9e2c4a5efb8833",
+ "impl": "pure-PyTorch port of official Co-Me direct mode (naive merge, SDPA per-key log-weight bias)",
+ "flops": {
+  "total": 2139792707584.0,
+  "frac": 0.018865056390138264,
+  "encoder": 739388817408.0,
+  "frame": 586125410304.0,
+  "global_": 664082055168.0,
+  "heads_est": 148271792128.0,
+  "method_overhead": 1924632576.0,
+  "tokens_per_frame": 119.0,
+  "hw": [
+   126,
+   252
+  ]
+ },
+ "torch": "2.14.1+cpu",
+ "gpu": "cpu",
+ "capability": null,
+ "dtype": "torch.float32",
+ "input_hw": [
+  126,
+  252
+ ],
+ "windows": {
+  "scene-0061_w0": {
+   "n_frames": 8,
+   "hw": [
+    126,
+    252
+   ],
+   "secs": 4.0775027250001585,
+   "peak_gib": -9.313225746154785e-10,
+   "merged_block_frac": 0.3541666567325592
+  }
+ }
+}

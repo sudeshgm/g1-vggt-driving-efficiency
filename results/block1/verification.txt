@@ -1,0 +1,13 @@
+dense_N32: 70 windows
+dense_N16: 70 windows
+dense_N8: 70 windows
+dense_res0.5: 70 windows
+dense_res0.25: 70 windows
+identical window sets: True
+identical scored LiDAR px per window across configs: True
+dense_N32: gpu=Tesla T4 cc=[7, 5] torch=2.11.0+cu128 cuda=12.8 dtype=torch.float16 attn_flash=True n=70 frames=[32] hw=[(294, 518)]
+dense_N16: gpu=Tesla T4 cc=[7, 5] torch=2.11.0+cu128 cuda=12.8 dtype=torch.float16 attn_flash=True n=70 frames=[16] hw=[(294, 518)]
+dense_N8: gpu=Tesla T4 cc=[7, 5] torch=2.11.0+cu128 cuda=12.8 dtype=torch.float16 attn_flash=True n=70 frames=[8] hw=[(294, 518)]
+dense_res0.5: gpu=Tesla T4 cc=[7, 5] torch=2.11.0+cu128 cuda=12.8 dtype=torch.float16 attn_flash=True n=70 frames=[32] hw=[(140, 252)]
+dense_res0.25: gpu=Tesla T4 cc=[7, 5] torch=2.11.0+cu128 cuda=12.8 dtype=torch.float16 attn_flash=True n=70 frames=[32] hw=[(70, 126)]
+dense_N32_timingrep: gpu=Tesla T4 cc=[7, 5] torch=2.11.0+cu128 cuda=12.8 dtype=torch.float16 attn_flash=True n=10 frames=[32] hw=[(294, 518)]

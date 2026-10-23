@@ -42,3 +42,8 @@ def test_pose_auc_perfect_and_bad():
 def test_bootstrap_ci_brackets_mean():
     m, lo, hi = bootstrap_ci(np.arange(30.), n_boot=2000)
     assert lo < m < hi and np.isclose(m, 14.5)
+
+def test_pointmap_error_zero_under_sim3():
+    rng = np.random.default_rng(2); g = rng.uniform(1, 60, size=(200, 3)); d = g[:, 2]
+    R = quat_to_R([0.9, 0.2, -0.1, 0.3]); p = 0.4 * (g @ R.T) + [3, 1, -2]
+    o = pointmap_error(p, g, d); assert o["all"]["rel"] < 1e-9 and set(o) >= {"0-15", "40-80", "all"}

@@ -16,7 +16,8 @@ def test_oracle_predictions(tmp_path):
                 if "depth_gt" in f:
                     g = np.load(f"{R}/" + f["depth_gt"]); u = ((g["u"] + .5) * Wd / 1600).astype(int); v = ((g["v"] + .5) * H / 900).astype(int)
                     dep[k, v, u] = g["d"] * 0.37
-            np.savez(d / f"{w['window_id']}.npz", idx=idx, extrinsic=ext, depth=dep, input_hw=np.array([H, Wd]), secs=1.0, peak_mem=0)
+            K = np.stack([np.diag([Wd / 1600, H / 900, 1.]) @ np.array(w["frames"][i]["K"]) for i in idx])
+            np.savez(d / f"{w['window_id']}.npz", idx=idx, intrinsic=K, extrinsic=ext, depth=dep, input_hw=np.array([H, Wd]), secs=1.0, peak_mem=0)
     man = tmp_path / "m.json"; json.dump({"windows": W}, open(man, "w"))
     subprocess.check_call([sys.executable, "scripts/score.py", str(tmp_path / "oracle_s1"), str(tmp_path / "oracle_s4"),
                            "--out", str(tmp_path / "res"), "--manifest", str(man)], cwd=R)
@@ -25,4 +26,4 @@ def test_oracle_predictions(tmp_path):
     for r in rows:
         assert float(r["auc30"]) == 1.0 and float(r["ate_m"]) < 1e-3
         # collisions at 294x518 make z-buffer ties; allow tiny error
-        assert float(r["absrel_all"]) < 0.02
+        assert float(r["absrel_all"]) < 0.02 and float(r["pm_rel_all"]) < 0.03

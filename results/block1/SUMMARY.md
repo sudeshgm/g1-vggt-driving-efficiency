@@ -38,3 +38,23 @@ So the cheap frame-drop control keeps far-field depth and pose, and an accelerat
 - (3) The calculated FLOP speed-up and the T4 wall-clock speed-up differ. N8 is 6.0x faster on the T4 against 6.7x calculated. res0.5 is 6.3x against 7.5x, and res0.25 is 20x against 33.7x.
 - (4) Peak memory is 7–9 GiB for all configs and is dominated by weights and heads, so it says little about compute.
 - (5) Turning has 9 windows from 4 scenes, so its CIs are wide.
+
+## Update 2026-10-23 22:xx IST — G1 Idea Agent decisions applied
+- **Scoring stays pre-registered:** frames 0,4,…,28, no interpolation.
+- **LIMITATION:** the scored frames are exactly N8's inputs (and a subset of N16's). Frame drop is never asked to recover frames it skipped, so its "no loss" result does not cover skipped frames.
+- **Extra check, not part of the stop rule:** N16 vs N32 scored on frames 0,2,…,30.
+  - LiDAR depth was added for idx%4==2 frames: 560 new files, so 1110/1120 frames now have depth (`scripts/add_stride2_depth.py`, `manifests/windows_stride2.json`).
+  - Paired deltas, with scene 95% CIs:
+    - AUC@30: −0.0004 [−0.0014, +0.0009]
+    - ATE: +0.0014 m [−0.0015, +0.0059]
+    - AbsRel 0-15: −0.0009 [−0.0038, +0.0015]
+    - AbsRel 15-40: +0.0013 [−0.0001, +0.0031]
+    - AbsRel 40-80: +0.0005 [−0.0005, +0.0014]
+    - point-map rel 40-80: −0.0003 [−0.0014, +0.0008]
+  - Every CI includes 0. The frames 0,2,…,30 are still N16's own inputs, so this check doubles the number of scored frames but does not test recovery either.
+- **Stationary windows:** report ATE and depth only. AUC is "n/a" in block1_tables.md and block1_motion_breakdown.csv (auc_reported=False).
+- **Turning:** reported but marked WEAK (9 windows, 4 scenes) and excluded from the decision (in_decision=False).
+- **Baselines to beat:** N16 (0.364) / N8 (0.148) at the 0.25 budget, and N8 at the 0.1 budget.
+  - Accelerator configs: `scripts/run_accel.py --plan` writes manifests/accel_plan.json.
+  - Main table at N32: only 0.5 is reachable, for the merging family (FastVGGT, GoToHunt, Co-Me). AVGGT is not reachable (min = 0.515). 0.25 and 0.1 are not reachable (min = 0.324).
+  - Combo column: N16 at 0.25 (merging family, keep 0.596; AVGGT sigma 9 → 0.247) and N8 at 0.1 (merging family, keep 0.404). AVGGT at N8 is not reachable (min = 0.121).

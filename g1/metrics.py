@@ -86,3 +86,15 @@ def bootstrap_ci(values, n_boot=10000, alpha=0.05, seed=0, stat=np.mean):
     rng = np.random.default_rng(seed)
     bs = np.array([stat(v[rng.integers(0, len(v), len(v))]) for _ in range(n_boot)])
     return float(stat(v)), float(np.quantile(bs, alpha / 2)), float(np.quantile(bs, 1 - alpha / 2))
+
+def pointmap_error(pred_pts, gt_pts, gt_depth, bins=RANGE_BINS_M):
+    """Point-map error: Umeyama sim(3) of predicted 3D points (pred depth+K+pose) onto GT LiDAR world points,
+    per range band: mean relative 3D error ||p-g||/d_gt and median absolute error (m, GT scale)."""
+    s, R, t = umeyama(pred_pts, gt_pts)
+    e = np.linalg.norm((s * (R @ pred_pts.T)).T + t - gt_pts, axis=1); out = {}
+    for lo, hi in list(bins) + [(0, np.inf)]:
+        m = (gt_depth >= lo) & (gt_depth < hi)
+        key = "all" if (lo, hi) == (0, np.inf) else f"{lo}-{hi if np.isfinite(hi) else 'inf'}"
+        out[key] = dict(rel=float((e[m] / gt_depth[m]).mean()) if m.any() else np.nan,
+                        med_m=float(np.median(e[m])) if m.any() else np.nan)
+    return out

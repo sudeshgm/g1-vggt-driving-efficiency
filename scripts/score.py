@@ -18,18 +18,26 @@ for d in a.preds:
         E = z["extrinsic"][pos]; pred = np.stack([np.linalg.inv(np.vstack([e, [0, 0, 0, 1]])) for e in E])
         gt = np.stack([np.array(w["frames"][i]["cam_to_world"]) for i in ev])
         auc = pose_auc(*pairwise_pose_errors(pred, gt)); a_te, (s, _, _) = ate(pred, gt)
-        H, Wd = z["input_hw"]; P, G = [], []
+        H, Wd = z["input_hw"]; P, G = [], []; PP, GP, GD = [], [], []
         for k, i in zip(pos, ev):
             fr = w["frames"][i]
             if "depth_gt" not in fr: continue
             g = np.load(fr["depth_gt"]); dm = z["depth"][k].astype(np.float32)
             u = np.clip((g["u"] + .5) * Wd / 1600, 0, Wd - 1).astype(int); v = np.clip((g["v"] + .5) * H / 900, 0, H - 1).astype(int)
             P.append(dm[v, u]); G.append(g["d"].astype(np.float32))
+            # point map: pred depth unprojected with PRED K + PRED pose (VGGT frame); GT LiDAR with GT K + pose (world)
+            uc = (g["u"] + .5) * Wd / 1600; vc = (g["v"] + .5) * H / 900; Kp = z["intrinsic"][k].astype(np.float64)
+            pc = np.stack([(uc - Kp[0, 2]) / Kp[0, 0], (vc - Kp[1, 2]) / Kp[1, 1], np.ones_like(uc)], 1) * dm[v, u][:, None]
+            Tp = pred[pos.index(k)]; PP.append(pc @ Tp[:3, :3].T + Tp[:3, 3])
+            Kg = np.array(fr["K"]); gd = g["d"].astype(np.float64)
+            gc = np.stack([(g["u"] + .5 - Kg[0, 2]) / Kg[0, 0], (g["v"] + .5 - Kg[1, 2]) / Kg[1, 1], np.ones_like(gd)], 1) * gd[:, None]
+            Tg = np.array(fr["cam_to_world"]); GP.append(gc @ Tg[:3, :3].T + Tg[:3, 3]); GD.append(gd)
         dmx = depth_metrics_binned(np.concatenate(P), np.concatenate(G))
+        pm = pointmap_error(np.concatenate(PP), np.concatenate(GP), np.concatenate(GD))
         cfg = os.path.basename(os.path.normpath(d))
         r = dict(config=cfg, window=wid, scene=w["scene"], state=w["state"], auc30=auc, ate_m=a_te,
                  secs=float(z["secs"]), peak_gib=float(z["peak_mem"]) / 2**30)
-        for b in BANDS: r[f"absrel_{b}"] = np.nan if b == "80-inf" else dmx[b]["absrel"]; r[f"d125_{b}"] = np.nan if b == "80-inf" else dmx[b]["d125"]; r[f"cov_{b}"] = dmx[b]["coverage"]; r[f"n_{b}"] = dmx[b]["n"]
+        for b in BANDS: r[f"absrel_{b}"] = np.nan if b == "80-inf" else dmx[b]["absrel"]; r[f"d125_{b}"] = np.nan if b == "80-inf" else dmx[b]["d125"]; r[f"cov_{b}"] = dmx[b]["coverage"]; r[f"n_{b}"] = dmx[b]["n"]; r[f"pm_rel_{b}"] = np.nan if b == "80-inf" else pm[b]["rel"]
         rows.append(r)
 os.makedirs(a.out, exist_ok=True)
 with open(f"{a.out}/per_window.csv", "w") as fh:
@@ -40,7 +48,7 @@ for c in sorted({r["config"] for r in rows}):
     for strat in ["all"] + sorted({r["state"] for r in R}):
         S = R if strat == "all" else [r for r in R if r["state"] == strat]
         o = dict(config=c, state=strat, n_windows=len(S), n_scenes=len({r["scene"] for r in S}))
-        for m in ["auc30", "ate_m"] + [f"absrel_{b}" for b in BANDS if b != "80-inf"] + [f"d125_{b}" for b in BANDS if b != "80-inf"] + [f"cov_{b}" for b in BANDS]:
+        for m in ["auc30", "ate_m"] + [f"absrel_{b}" for b in BANDS if b != "80-inf"] + [f"d125_{b}" for b in BANDS if b != "80-inf"] + [f"pm_rel_{b}" for b in BANDS if b != "80-inf"] + ["secs", "peak_gib"] + [f"cov_{b}" for b in BANDS]:
             mu, lo, hi = bootstrap_ci([r[m] for r in S], n_boot=2000)
             sc = {}; [sc.setdefault(r["scene"], []).append(r[m]) for r in S]
             _, slo, shi = bootstrap_ci([np.nanmean(v) for v in sc.values()], n_boot=2000)
@@ -53,7 +61,7 @@ print(f"{len(rows)} rows -> {a.out}/summary.csv")
 if any(r["config"] == "dense_N32" for r in rows):
     base = {r["window"]: r for r in rows if r["config"] == "dense_N32"}; rel = []
     for c in sorted({r["config"] for r in rows}):
-        for m in ["auc30", "absrel_0-15", "absrel_15-40", "absrel_40-80", "absrel_all"]:
+        for m in ["auc30", "ate_m", "pm_rel_40-80", "pm_rel_all", "absrel_0-15", "absrel_15-40", "absrel_40-80", "absrel_all"]:
             d_ = [r[m] - base[r["window"]][m] for r in rows if r["config"] == c and r["window"] in base]
             sc = {}; [sc.setdefault(r["scene"], []).append(r[m] - base[r["window"]][m]) for r in rows if r["config"] == c and r["window"] in base]
             mu, lo, hi = bootstrap_ci([np.nanmean(v) for v in sc.values()], n_boot=2000)

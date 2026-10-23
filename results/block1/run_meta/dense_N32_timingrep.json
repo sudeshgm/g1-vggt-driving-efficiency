@@ -1,0 +1,122 @@
+{
+ "config": {
+  "manifest": "manifests/windows.json",
+  "img_root": "bundle/images",
+  "stride": 1,
+  "scale": 1.0,
+  "out": "preds/dense_N32_timingrep",
+  "dtype": "fp16",
+  "attn": "sdpa",
+  "method": "dense",
+  "sigma": 4,
+  "t_early": 9,
+  "max_windows": 10,
+  "max_frames": 0,
+  "random_init": false,
+  "warmup": 1
+ },
+ "device": "cuda",
+ "gpu": "Tesla T4",
+ "capability": [
+  7,
+  5
+ ],
+ "torch": "2.11.0+cu128",
+ "cuda": "12.8",
+ "cudnn": 91900,
+ "sdpa_flash_enabled": true,
+ "dtype": "torch.float16",
+ "weights": "facebook/VGGT-1B",
+ "windows": {
+  "scene-0061_w0": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 11.965331184999968,
+   "peak_gib": 8.879655361175537
+  },
+  "scene-0061_w1": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.048381376999941,
+   "peak_gib": 8.928341388702393
+  },
+  "scene-0061_w2": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.10796758299989,
+   "peak_gib": 8.930295467376709
+  },
+  "scene-0061_w3": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.152860581999903,
+   "peak_gib": 8.932790756225586
+  },
+  "scene-0061_w4": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.19107505299985,
+   "peak_gib": 8.931992053985596
+  },
+  "scene-0061_w5": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.253466349000064,
+   "peak_gib": 8.932490825653076
+  },
+  "scene-0061_w6": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.308094776999951,
+   "peak_gib": 8.926080226898193
+  },
+  "scene-0103_w0": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.305253915000094,
+   "peak_gib": 8.933897495269775
+  },
+  "scene-0103_w1": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.334504654000057,
+   "peak_gib": 8.929348468780518
+  },
+  "scene-0103_w2": {
+   "n_frames": 32,
+   "hw": [
+    294,
+    518
+   ],
+   "secs": 12.342986228999962,
+   "peak_gib": 8.935848712921143
+  }
+ }
+}

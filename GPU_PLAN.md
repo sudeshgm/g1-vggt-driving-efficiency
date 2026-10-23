@@ -23,25 +23,20 @@ Runs dense_N32, dense_N16, dense_N8, dense_res0.5, dense_res0.25 over 70 windows
 preds/*/run_meta.json with GPU name/torch/CUDA/per-window secs+peak mem, logs_*.txt) and, if space allows,
 `preds/` npz (~1.5 GB) for re-scoring.
 
-## Step 2 — accelerators (main table + combo column)
-Analytic FLOP fractions (results/block1/flop_table.csv; dense N32 = 113.4 TFLOP):
+## Step 2 — accelerators (`g1_kaggle_accel.tar`, `run_accel_all.sh smoke` then `full`)
+FLOP model replaced (g1/flops_accel.py): FastVGGT, GoToHunt and AVGGT shrink ONLY the global attention matmuls (qkv/proj/MLP
+stay full), so K/V-only methods floor at ~0.46 at N32; Co-Me also merges before MLP. Plan (manifests/accel_plan.json):
 
-| Method | Native configs (frac) | Main 0.5 / 0.25 / 0.1 | Combo column (with frame drop) | sm80+? |
-|---|---|---|---|---|
-| AVGGT (our reimpl., t_early=9, σ∈{2,4,6,9}) | 0.644 / 0.564 / 0.536 / 0.515 | **not reachable (min = 0.515)** at all three | N16 σ=2..9: 0.278–0.247 (→0.25 cell: σ=9 N16 0.247); N8: 0.128–0.121 (0.1 not reachable) | No (pure PyTorch, explicit chunked attention; accuracy exact, speed not representative) |
-| Global-token reduction family (FastVGGT; GoToHunt token part) | keep 0.46 → 0.5 | 0.5 reachable; 0.25/0.1 **not reachable (min = 0.324)** | N16 keep 0.596 → 0.25; N8 keep 0.404 → 0.1 | FastVGGT: no; GoToHunt: no custom kernel found (verify) |
-| GoToHunt (official) | set via `--token_ds_layers`, `--global_as_frame_layers`, `--frame_token_downsample`; achieved FLOPs computed by our counter per config | as reached | as reached | verify on T4 |
-| Co-Me (official) | merge ratio configs; kernels | as reached | as reached | **Effectively yes** (manual CUDA kernels; verified only on A100/Ada/5090) → accuracy on T4 via eager/unfused path if it exists, else Modal A100 |
+| cell | knob (faithful) | achieved frac | budget met? |
+|---|---|---|---|
+| fastvggt 0.5/N32, 0.25/N16, 0.1/N8 | merging=0, merge_ratio=0.9 (paper; saturates: dst+10% protected never merge) | 0.580 / 0.263 / 0.124 | no / no / no (run at min) |
+| gotohunt 0.5/N32, 0.25/N16, 0.1/N8 | paper/README: t=3, K/V ds layers 2-8, global-as-frame {0,1}, frame selection OFF | 0.816 / 0.319 / 0.137 | no / no / no (run at paper config) |
+| gotohunt_all 0.5/N32 | official standalone path: ds in ALL non-gaf layers, t=4 (budget-forced) | 0.497 | yes |
+| come 0.5/N32, 0.25/N16, 0.1/N8 | direct 3x3, enc layer 14, ranking threshold 0.447 / 0.292 / 0.352, input 294x504 | 0.495 / 0.247 / 0.099 | yes |
+| avggt 0.25/N16 | sigma 9, t_early 9 (our reimpl.) | 0.247 | yes |
 
-AVGGT runs (T4, fp16):
-```bash
-for S in 2 4 9; do python scripts/run_vggt.py --method avggt --sigma $S --t_early 9 --out preds/avggt_s${S}_N32; done
-python scripts/run_vggt.py --method avggt --sigma 9 --t_early 9 --stride 2 --out preds/avggt_s9_N16   # combo -> 0.247
-python scripts/run_vggt.py --method avggt --sigma 9 --t_early 9 --stride 4 --out preds/avggt_s9_N8    # combo -> 0.121
-```
-FastVGGT / GoToHunt: clone official repos inside the notebook, wrap with `scripts/run_accel.py` (TO WRITE after a
-15-min smoke test per repo) writing the same npz schema; GoToHunt frame selection (`--frame_strategy`) DISABLED so
-the input frames equal the config's frames. Configure each to the budget via our FLOP counter; record achieved frac.
+Co-Me on T4: pure-PyTorch port of the official direct mode (numerically exact at threshold 0 vs stock VGGT); the sm80+
+fused kernels are NOT used, so T4 wall-clock for Co-Me is not representative — speed claim only from the Modal A100 check.
 
 ## Step 3 — Modal A100 check (Co-Me only, < 20 min)
 Goal: one sm80 data point — does Co-Me's fused kernel build and what is its measured vs analytic speed-up at N=32.
@@ -64,3 +59,8 @@ accuracy with our scorer). Nothing else runs on Modal.
 | Env setup / kernel-build attempts / debug | ~4 |
 | Margin ×1.3 | ~4 |
 | **Total** | **≈ 15–17 GPU-h** (cap 30) |
+
+### Accelerators (T4 estimate, 2026-10-23)
+Per-window ≈ dense s/window × FLOP frac (+30% for Co-Me per-segment loop / FastVGGT similarity): ≈ 55 s per window over the
+11 cells × 70 windows ≈ 1.1 h, + weight loads/smoke (11 cells × 1 window + loads) ≈ 0.4 h → **≈ 1.5 T4-h (budget 3 h with
+margin)**; on 2x T4 two lanes ≈ 50 min wall. Cumulative G1 ≈ 3.1 + ≤3 = ≤6.1 of the 30 h/week cap.

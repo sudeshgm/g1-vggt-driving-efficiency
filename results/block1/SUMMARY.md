@@ -39,7 +39,7 @@ So the cheap frame-drop control keeps far-field depth and pose, and an accelerat
 - (4) Peak memory is 7–9 GiB for all configs and is dominated by weights and heads, so it says little about compute.
 - (5) Turning has 9 windows from 4 scenes, so its CIs are wide.
 
-## Update 2026-10-23 22:xx IST — G1 Idea Agent decisions applied
+## Update 2026-10-23 22:01 IST — G1 Idea Agent decisions applied
 - **Scoring stays pre-registered:** frames 0,4,…,28, no interpolation.
 - **LIMITATION:** the scored frames are exactly N8's inputs (and a subset of N16's). Frame drop is never asked to recover frames it skipped, so its "no loss" result does not cover skipped frames.
 - **Extra check, not part of the stop rule:** N16 vs N32 scored on frames 0,2,…,30.
@@ -58,3 +58,16 @@ So the cheap frame-drop control keeps far-field depth and pose, and an accelerat
   - Accelerator configs: `scripts/run_accel.py --plan` writes manifests/accel_plan.json.
   - Main table at N32: only 0.5 is reachable, for the merging family (FastVGGT, GoToHunt, Co-Me). AVGGT is not reachable (min = 0.515). 0.25 and 0.1 are not reachable (min = 0.324).
   - Combo column: N16 at 0.25 (merging family, keep 0.596; AVGGT sigma 9 → 0.247) and N8 at 0.1 (merging family, keep 0.404). AVGGT at N8 is not reachable (min = 0.121).
+
+## Update 2026-10-23 23:05 IST — accelerator adapters (CPU-verified, not yet run on GPU)
+- Adapters in scripts/run_accel.py: FastVGGT (official package, patched dtype/cuda guards, stock weights strict=False:
+  0 missing keys, unexpected point_head/track_head), GoToHunt (official Attention.forward on stock VGGT, frame selection
+  OFF), Co-Me (pure-PyTorch port of direct mode with official predictor ckpt), AVGGT (ours). Pins: third_party/PINS.md.
+- Exactness checks (CPU, 1 window, N8 half-res): GoToHunt t=1 == dense (max |Δpose_enc| 5e-7); Co-Me threshold 0 == dense
+  (5e-7); merged-block fraction = threshold (0.354 vs 0.352).
+- FLOP plan recomputed with method-specific models: FastVGGT cannot reach any budget (merge saturates: 0.580/0.263/0.124);
+  GoToHunt paper config can't (0.816/0.319/0.137) -> extra budget-forced "gotohunt_all" cell (0.497); Co-Me and AVGGT reach.
+- CPU 1-window scores (N8, half-res; not evidence, smoke only): results/block2_cpucheck/. Notable: all-layer GoToHunt K/V
+  downsampling degrades pose at small grids (t=3 all layers: |Δpose_enc| 0.92); paper layer range 2-8 keeps it (0.025).
+  Co-Me at threshold 0.5 changes depth by 36% mean rel. on merged regions included (Co-Me's own eval masks merged regions;
+  we score all pixels as pre-registered).

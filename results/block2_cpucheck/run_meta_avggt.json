@@ -1,0 +1,42 @@
+{
+ "method": "avggt",
+ "budget": 0.25,
+ "frames": 8,
+ "scale": 0.5,
+ "plan": {
+  "reachable": true,
+  "sigma": 2,
+  "t_early": 9,
+  "achieved": 0.1281
+ },
+ "repo": "(no official code; g1/avggt.py = our reimplementation)",
+ "impl": "our reimplementation (g1/avggt.py)",
+ "flops": {
+  "total": 2988026036224.0,
+  "frac": 0.026343336655358818,
+  "encoder": 922539786240.0,
+  "frame": 920805703680.0,
+  "global_": 981365882880.0,
+  "heads_est": 163314663424.0,
+  "method_overhead": 0.0
+ },
+ "torch": "2.14.1+cpu",
+ "gpu": "cpu",
+ "capability": null,
+ "dtype": "torch.float32",
+ "input_hw": [
+  140,
+  252
+ ],
+ "windows": {
+  "scene-0061_w0": {
+   "n_frames": 8,
+   "hw": [
+    140,
+    252
+   ],
+   "secs": 4.551447583999106,
+   "peak_gib": -9.313225746154785e-10
+  }
+ }
+}

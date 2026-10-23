@@ -3,356 +3,193 @@
   "method": "fastvggt",
   "budget": 0.5,
   "frames": 32,
-  "column": "main",
+  "dense_frac": 1.0,
   "out": "preds/fastvggt_b0.5_N32",
-  "reachable": true,
-  "keep_global": 0.4597,
-  "merge_ratio": 0.5403,
-  "achieved": 0.5
- },
- {
-  "method": "fastvggt",
-  "budget": 0.5,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/fastvggt_b0.5_N16",
   "reachable": false,
-  "note": "frame drop alone already <= budget (0.364)",
-  "min": 0.36432148996299346
- },
- {
-  "method": "fastvggt",
-  "budget": 0.5,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/fastvggt_b0.5_N8",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "fastvggt",
-  "budget": 0.25,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/fastvggt_b0.25_N32",
-  "reachable": false,
-  "min": 0.324
+  "merge_ratio": 0.9,
+  "merging": 0,
+  "achieved": 0.58,
+  "note": "min achievable 0.580 (merge saturates)"
  },
  {
   "method": "fastvggt",
   "budget": 0.25,
   "frames": 16,
-  "column": "combo",
+  "dense_frac": 0.3643,
   "out": "preds/fastvggt_b0.25_N16",
-  "reachable": true,
-  "keep_global": 0.5963,
-  "merge_ratio": 0.4037,
-  "achieved": 0.25
- },
- {
-  "method": "fastvggt",
-  "budget": 0.25,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/fastvggt_b0.25_N8",
   "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "fastvggt",
-  "budget": 0.1,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/fastvggt_b0.1_N32",
-  "reachable": false,
-  "min": 0.324
- },
- {
-  "method": "fastvggt",
-  "budget": 0.1,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/fastvggt_b0.1_N16",
-  "reachable": false,
-  "min": 0.162
+  "merge_ratio": 0.9,
+  "merging": 0,
+  "achieved": 0.2625,
+  "note": "min achievable 0.262 (merge saturates)"
  },
  {
   "method": "fastvggt",
   "budget": 0.1,
   "frames": 8,
-  "column": "combo",
+  "dense_frac": 0.1482,
   "out": "preds/fastvggt_b0.1_N8",
-  "reachable": true,
-  "keep_global": 0.404,
-  "merge_ratio": 0.596,
-  "achieved": 0.1
+  "reachable": false,
+  "merge_ratio": 0.9,
+  "merging": 0,
+  "achieved": 0.1244,
+  "note": "min achievable 0.124 (merge saturates)"
  },
  {
   "method": "gotohunt",
   "budget": 0.5,
   "frames": 32,
-  "column": "main",
+  "dense_frac": 1.0,
   "out": "preds/gotohunt_b0.5_N32",
-  "reachable": true,
-  "keep_global": 0.4597,
-  "merge_ratio": 0.5403,
-  "achieved": 0.5
- },
- {
-  "method": "gotohunt",
-  "budget": 0.5,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/gotohunt_b0.5_N16",
   "reachable": false,
-  "note": "frame drop alone already <= budget (0.364)",
-  "min": 0.36432148996299346
- },
- {
-  "method": "gotohunt",
-  "budget": 0.5,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/gotohunt_b0.5_N8",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "gotohunt",
-  "budget": 0.25,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/gotohunt_b0.25_N32",
-  "reachable": false,
-  "min": 0.324
+  "t": 3,
+  "gaf_layers": [
+   0,
+   1
+  ],
+  "ds_layers": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "achieved": 0.8163,
+  "note": "paper config min 0.816"
  },
  {
   "method": "gotohunt",
   "budget": 0.25,
   "frames": 16,
-  "column": "combo",
+  "dense_frac": 0.3643,
   "out": "preds/gotohunt_b0.25_N16",
-  "reachable": true,
-  "keep_global": 0.5963,
-  "merge_ratio": 0.4037,
-  "achieved": 0.25
- },
- {
-  "method": "gotohunt",
-  "budget": 0.25,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/gotohunt_b0.25_N8",
   "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "gotohunt",
-  "budget": 0.1,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/gotohunt_b0.1_N32",
-  "reachable": false,
-  "min": 0.324
- },
- {
-  "method": "gotohunt",
-  "budget": 0.1,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/gotohunt_b0.1_N16",
-  "reachable": false,
-  "min": 0.162
+  "t": 3,
+  "gaf_layers": [
+   0,
+   1
+  ],
+  "ds_layers": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "achieved": 0.3188,
+  "note": "paper config min 0.319"
  },
  {
   "method": "gotohunt",
   "budget": 0.1,
   "frames": 8,
-  "column": "combo",
+  "dense_frac": 0.1482,
   "out": "preds/gotohunt_b0.1_N8",
+  "reachable": false,
+  "t": 3,
+  "gaf_layers": [
+   0,
+   1
+  ],
+  "ds_layers": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "achieved": 0.137,
+  "note": "paper config min 0.137"
+ },
+ {
+  "method": "gotohunt_all",
+  "budget": 0.5,
+  "frames": 32,
+  "dense_frac": 1.0,
+  "out": "preds/gotohunt_all_b0.5_N32",
   "reachable": true,
-  "keep_global": 0.404,
-  "merge_ratio": 0.596,
-  "achieved": 0.1
+  "t": 4,
+  "gaf_layers": [
+   0,
+   1
+  ],
+  "ds_layers": [
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23
+  ],
+  "achieved": 0.4969
  },
  {
   "method": "come",
   "budget": 0.5,
   "frames": 32,
-  "column": "main",
+  "dense_frac": 1.0,
   "out": "preds/come_b0.5_N32",
   "reachable": true,
-  "keep_global": 0.4597,
-  "merge_ratio": 0.5403,
-  "achieved": 0.5
- },
- {
-  "method": "come",
-  "budget": 0.5,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/come_b0.5_N16",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.364)",
-  "min": 0.36432148996299346
- },
- {
-  "method": "come",
-  "budget": 0.5,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/come_b0.5_N8",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "come",
-  "budget": 0.25,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/come_b0.25_N32",
-  "reachable": false,
-  "min": 0.324
+  "threshold": 0.447,
+  "encoder_layer": 14,
+  "group": 3,
+  "achieved": 0.4951
  },
  {
   "method": "come",
   "budget": 0.25,
   "frames": 16,
-  "column": "combo",
+  "dense_frac": 0.3643,
   "out": "preds/come_b0.25_N16",
   "reachable": true,
-  "keep_global": 0.5963,
-  "merge_ratio": 0.4037,
-  "achieved": 0.25
- },
- {
-  "method": "come",
-  "budget": 0.25,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/come_b0.25_N8",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "come",
-  "budget": 0.1,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/come_b0.1_N32",
-  "reachable": false,
-  "min": 0.324
- },
- {
-  "method": "come",
-  "budget": 0.1,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/come_b0.1_N16",
-  "reachable": false,
-  "min": 0.162
+  "threshold": 0.292,
+  "encoder_layer": 14,
+  "group": 3,
+  "achieved": 0.2471
  },
  {
   "method": "come",
   "budget": 0.1,
   "frames": 8,
-  "column": "combo",
+  "dense_frac": 0.1482,
   "out": "preds/come_b0.1_N8",
   "reachable": true,
-  "keep_global": 0.404,
-  "merge_ratio": 0.596,
-  "achieved": 0.1
- },
- {
-  "method": "avggt",
-  "budget": 0.5,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/avggt_b0.5_N32",
-  "reachable": false,
-  "min": 0.515
- },
- {
-  "method": "avggt",
-  "budget": 0.5,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/avggt_b0.5_N16",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.364)",
-  "min": 0.36432148996299346
- },
- {
-  "method": "avggt",
-  "budget": 0.5,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/avggt_b0.5_N8",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "avggt",
-  "budget": 0.25,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/avggt_b0.25_N32",
-  "reachable": false,
-  "min": 0.515
+  "threshold": 0.352,
+  "encoder_layer": 14,
+  "group": 3,
+  "achieved": 0.0991
  },
  {
   "method": "avggt",
   "budget": 0.25,
   "frames": 16,
-  "column": "combo",
+  "dense_frac": 0.3643,
   "out": "preds/avggt_b0.25_N16",
   "reachable": true,
   "sigma": 9,
   "t_early": 9,
   "achieved": 0.2469
- },
- {
-  "method": "avggt",
-  "budget": 0.25,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/avggt_b0.25_N8",
-  "reachable": false,
-  "note": "frame drop alone already <= budget (0.148)",
-  "min": 0.1482411174722451
- },
- {
-  "method": "avggt",
-  "budget": 0.1,
-  "frames": 32,
-  "column": "main",
-  "out": "preds/avggt_b0.1_N32",
-  "reachable": false,
-  "min": 0.515
- },
- {
-  "method": "avggt",
-  "budget": 0.1,
-  "frames": 16,
-  "column": "combo",
-  "out": "preds/avggt_b0.1_N16",
-  "reachable": false,
-  "min": 0.247
- },
- {
-  "method": "avggt",
-  "budget": 0.1,
-  "frames": 8,
-  "column": "combo",
-  "out": "preds/avggt_b0.1_N8",
-  "reachable": false,
-  "min": 0.121
  }
 ]

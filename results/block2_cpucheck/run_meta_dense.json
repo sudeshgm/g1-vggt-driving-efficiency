@@ -1,0 +1,38 @@
+{
+ "config": {
+  "manifest": "manifests/windows.json",
+  "img_root": "bundle/images",
+  "stride": 4,
+  "scale": 0.5,
+  "out": "/workspace/g1_cpucheck/dense",
+  "dtype": "fp32",
+  "attn": "sdpa",
+  "method": "dense",
+  "sigma": 4,
+  "t_early": 9,
+  "max_windows": 1,
+  "max_frames": 0,
+  "random_init": false,
+  "warmup": 1
+ },
+ "device": "cpu",
+ "gpu": "cpu",
+ "capability": null,
+ "torch": "2.14.1+cpu",
+ "cuda": null,
+ "cudnn": null,
+ "sdpa_flash_enabled": null,
+ "dtype": "torch.float32",
+ "weights": "facebook/VGGT-1B",
+ "windows": {
+  "scene-0061_w0": {
+   "n_frames": 8,
+   "hw": [
+    140,
+    252
+   ],
+   "secs": 3.835174690999338,
+   "peak_gib": -9.313225746154785e-10
+  }
+ }
+}

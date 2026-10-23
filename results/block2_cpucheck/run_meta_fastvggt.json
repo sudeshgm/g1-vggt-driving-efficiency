@@ -1,0 +1,50 @@
+{
+ "method": "fastvggt",
+ "budget": 0.1,
+ "frames": 8,
+ "scale": 0.5,
+ "plan": {
+  "reachable": false,
+  "merge_ratio": 0.9,
+  "merging": 0,
+  "achieved": 0.1244,
+  "note": "min achievable 0.124 (merge saturates)"
+ },
+ "repo": "https://github.com/mystorm16/FastVGGT@6526e275a29572653a034762bb3c6c9ce280ff55",
+ "impl": "official FastVGGT (patched: dtype/cuda guards)",
+ "missing_keys": [],
+ "unexpected_prefixes": [
+  "point_head",
+  "track_head"
+ ],
+ "flops": {
+  "total": 2971257978880.0,
+  "frac": 0.026195504416176737,
+  "encoder": 922539786240.0,
+  "frame": 920805703680.0,
+  "global_": 939747803136.0,
+  "heads_est": 163314663424.0,
+  "method_overhead": 24850022400.0,
+  "kept_tokens": 683.0,
+  "total_tokens": 1480.0
+ },
+ "torch": "2.14.1+cpu",
+ "gpu": "cpu",
+ "capability": null,
+ "dtype": "torch.float32",
+ "input_hw": [
+  140,
+  252
+ ],
+ "windows": {
+  "scene-0061_w0": {
+   "n_frames": 8,
+   "hw": [
+    140,
+    252
+   ],
+   "secs": 3.876356916000077,
+   "peak_gib": -9.313225746154785e-10
+  }
+ }
+}

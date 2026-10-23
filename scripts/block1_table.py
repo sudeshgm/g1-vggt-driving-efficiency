@@ -47,21 +47,27 @@ for c in CF:
 with open(f"{O}/block1_controls_table.csv", "w") as fh:
     w = csv.DictWriter(fh, fieldnames=rows[0].keys()); w.writeheader(); w.writerows(rows)
 # motion breakdown
-mb = ["| config | state | n win (scenes) | " + " | ".join(m[1] for m in M[:1] + M[2:4] + M[4:7]) + " |", "|" + "---|" * 9]
+mb = ["| config | state | n win (scenes) | " + " | ".join(m[1] for m in M[:1] + M[2:4] + M[4:7]) + " | ATE m |", "|" + "---|" * 10]
 mrows = []
 for st in ["stationary", "straight", "turning", "other"]:
     for c in CF:
         o = get(c, st)
         if not o: continue
-        mrows.append({"config": c, "state": st, "n_windows": o["n_windows"], "n_scenes": o["n_scenes"], **{m[0]: float(o[m[0]]) for m in M}})
-        mb.append(f"| {LBL[c]} | {st} | {o['n_windows']} ({o['n_scenes']}) | " + " | ".join(cell(o, m[0], 3) for m in M[:1] + M[2:7]) + " |")
+        mrows.append({"config": c, "state": st, "in_decision": st not in ("turning",), "auc_reported": st != "stationary", "n_windows": o["n_windows"], "n_scenes": o["n_scenes"], **{m[0]: float(o[m[0]]) for m in M}})
+        cs_ = ["n/a (pose AUC undefined when stationary)" if (st == "stationary" and m[0] == "auc30") else cell(o, m[0], 3) for m in M[:1] + M[2:7]]
+        tag = {"turning": "turning (WEAK: n=9/4 scenes; excluded from decision)", "stationary": "stationary (ATE+depth only)"}.get(st, st)
+        mb.append(f"| {LBL[c]} | {tag} | {o['n_windows']} ({o['n_scenes']}) | " + " | ".join(cs_) + f" | {float(o['ate_m']):.3f} |")
 with open(f"{O}/block1_motion_breakdown.csv", "w") as fh:
     w = csv.DictWriter(fh, fieldnames=mrows[0].keys()); w.writeheader(); w.writerows(mrows)
 dl = list(csv.DictReader(open(f"{O}/delta_vs_dense.csv")))
 dmd = ["| config | metric | delta vs N32 | scene 95% CI |", "|---|---|---|---|"] + [f"| {LBL.get(d['config'], d['config'])} | {d['metric']} | {float(d['delta_vs_dense_mean']):+.4f} | [{float(d['scene_ci_lo']):+.4f}, {float(d['scene_ci_hi']):+.4f}] |" for d in dl if d["config"] != "dense_N32"]
+S2 = "results/block1/stride2_check/delta_vs_dense.csv"
+s2md = ""
+if os.path.exists(S2):
+    s2md = "\n\n## Extra check (NOT stop rule): N16 vs N32 on frames 0,2,...,30 (scene CI)\nNote: these are exactly N16's input frames, so this tests more scored frames, not recovery of skipped frames.\n\n| metric | delta | scene 95% CI |\n|---|---|---|\n" + "\n".join(f"| {d['metric']} | {float(d['delta_vs_dense_mean']):+.4f} | [{float(d['scene_ci_lo']):+.4f}, {float(d['scene_ci_hi']):+.4f}] |" for d in csv.DictReader(open(S2)) if d["config"] == "dense_N16")
 open(f"{O}/block1_tables.md", "w").write("## Main (all 70 windows / 10 scenes; scene-level 95% CI)\n\n" + "\n".join(md) +
     f"\n\nTiming repeat N32 (10 windows): median {rep:.2f} s/window.\n\n## Delta vs dense N32 (paired, scene CI)\n\n" + "\n".join(dmd) +
-    "\n\n## By motion label\n\n" + "\n".join(mb) + "\n")
+    "\n\n## By motion label (decision uses all/straight/other/stationary; turning reported, weak, excluded; stationary: no AUC)\n\n" + "\n".join(mb) + s2md + "\n")
 # ---------- plot ----------
 fig, ax = plt.subplots(1, 3, figsize=(14, 4))
 for a_, (k, t) in zip(ax, [("auc30", "Pose AUC@30 (higher better)"), ("absrel_40-80", "AbsRel 40-80 m (lower better)"), ("absrel_0-15", "AbsRel 0-15 m / PtMap rel all")]):
